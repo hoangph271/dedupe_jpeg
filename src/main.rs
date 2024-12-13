@@ -16,10 +16,11 @@ fn main() {
 
     println!(
         "Finding JPEG with existing raw (.{}) files in {}:",
-        cli.raw_ext, cli.dir
+        cli.raw_ext, &cli.dir
     );
 
-    let items = std::fs::read_dir(cli.dir).expect("Failed to read directory");
+    let items = std::fs::read_dir(&cli.dir)
+        .expect(format!("Failed to read directory {}", cli.dir).as_str());
 
     for item in items {
         let item = item.expect("Failed to read item");
@@ -27,7 +28,7 @@ fn main() {
         let path_str = path.to_str().expect("Failed to convert path to string");
 
         if path_str.ends_with(".JPG") || path_str.ends_with(".jpg") {
-            let raw_path = path.with_extension(format!(".{}", cli.raw_ext));
+            let raw_path = path.with_extension(&cli.raw_ext);
 
             if raw_path.exists() {
                 println!(
