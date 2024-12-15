@@ -20,7 +20,9 @@ fn main() {
     );
 
     let items = std::fs::read_dir(&cli.dir)
-        .expect(format!("Failed to read directory {}", cli.dir).as_str());
+        .unwrap_or_else(|_| panic!("Failed to read directory {}", cli.dir));
+
+    let mut matched_files_count = 0;
 
     for item in items {
         let item = item.expect("Failed to read item");
@@ -31,6 +33,8 @@ fn main() {
             let raw_path = path.with_extension(&cli.raw_ext);
 
             if raw_path.exists() {
+                matched_files_count += 1;
+
                 println!(
                     "Found {} with existing raw file {}",
                     path_str,
@@ -47,7 +51,14 @@ fn main() {
                         }
                     }
                 } else if cli.rename {
-                    let new_path = path.with_extension("to_delete");
+                    let new_path = path
+                        .join(format!(
+                            ".{}",
+                            path.extension()
+                                .map(|ext| ext.to_string_lossy())
+                                .unwrap_or_else(|| std::borrow::Cow::Borrowed("Unknown"))
+                        ))
+                        .with_extension("to_delete");
 
                     match std::fs::rename(path_str, &new_path) {
                         Ok(()) => {
@@ -65,4 +76,6 @@ fn main() {
             }
         }
     }
+
+    println!("Matched files count: {}", matched_files_count);
 }
